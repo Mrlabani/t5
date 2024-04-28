@@ -47,18 +47,18 @@ async def start(m: UpdateNewMessage):
 
 📥 **Send me the Terabox link and I will start downloading it for you.** 📥
 
-🔗 **Join [Owner](https://t.me/x_O4i) for Updates** 🔗
+🔗 **Join [Owner](https://t.me/Labani_Botz) for Updates** 🔗
 
 🤖 **Make Your Own Private Terabox Bot at [x_O4i](https://t.me/x_O4i)** 🤖
 """
     check_if_x_O4i = await is_user_on_chat(bot, "@x_O4i", m.peer_id)
     if not check_if_x_O4i:
-        await m.reply("Please join @x_O4i then send me the link again.")
+        await m.reply("Please join @Labani_Botz then send me the link again.")
         return
 
     check_if_x_O4i_chat = await is_user_on_chat(bot, "@x_O4i", m.peer_id)
     if not check_if_x_O4i_chat:
-        await m.reply("Please join @x_O4i then send me the link again.")
+        await m.reply("Please join @Labani_Botz then send me the link again.")
         return
 
     await m.reply(reply_text, link_preview=False, parse_mode="markdown")
@@ -78,11 +78,11 @@ async def start(m: UpdateNewMessage):
     fileid = db.get(str(text))
     check_if = await is_user_on_chat(bot, "@x_O4i", m.peer_id)
     if not check_if:
-        return await m.reply("Please join @x_O4i then send me the link again.")
+        return await m.reply("Please join @Labani_Botz then send me the link again.")
     check_if = await is_user_on_chat(bot, "@x_O4i", m.peer_id)
     if not check_if:
         return await m.reply(
-            "Please join @x_O4i then send me the link again."
+            "Please join @Labani_Botz then send me the link again."
         )
     await bot(
         ForwardMessagesRequest(
@@ -135,7 +135,7 @@ async def handle_message(m: Message):
         return await m.reply("Please enter a valid url.")
     check_if = await is_user_on_chat(bot, "@x_O4i", m.peer_id)
     if not check_if:
-        return await m.reply("Please join @x_O4i then send me the link again.")
+        return await m.reply("Please join @Labani_Botz then send me the link again.")
     check_if = await is_user_on_chat(bot, "@x_O4i", m.peer_id)
     if not check_if:
         return await m.reply(
