@@ -1,2 +1,2 @@
-# Terabox-dl
-Owner :- @Labani 🍁
+# Zxlabani
+Terabox Downloader Bot |  - By Zxlbni
