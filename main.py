@@ -47,18 +47,18 @@ async def start(m: UpdateNewMessage):
 
 📥 **Send me the Terabox link and I will start downloading it for you.** 📥
 
-🔗 **Join [Owner](https://t.me/Labani_Botz) for Updates** 🔗
+🔗 **Join [Labani Botz](https://t.me/Labani_Botz) for Updates** 🔗
 
-🤖 **Make Your Own Private Terabox Bot at [x_O4i](https://t.me/x_O4i)** 🤖
+🤖 **Make Your Own Private Terabox Bot at [Labani_Chat](https://t.me/Labani_Chat)** 🤖
 """
-    check_if_x_O4i = await is_user_on_chat(bot, "@x_O4i", m.peer_id)
-    if not check_if_x_O4i:
+    check_if_Labani_Botz = await is_user_on_chat(bot, "@Labani_Botz", m.peer_id)
+    if not check_if_Labani_Botz:
         await m.reply("Please join @Labani_Botz then send me the link again.")
         return
 
-    check_if_x_O4i_chat = await is_user_on_chat(bot, "@x_O4i", m.peer_id)
-    if not check_if_x_O4i_chat:
-        await m.reply("Please join @Labani_Botz then send me the link again.")
+    check_if_Labani_Botz_chat = await is_user_on_chat(bot, "@Labani_Chat", m.peer_id)
+    if not check_if_Labani_Botz_chat:
+        await m.reply("Please join @Labani_Chat then send me the link again.")
         return
 
     await m.reply(reply_text, link_preview=False, parse_mode="markdown")
@@ -76,13 +76,13 @@ async def start(m: UpdateNewMessage):
 async def start(m: UpdateNewMessage):
     text = m.pattern_match.group(1)
     fileid = db.get(str(text))
-    check_if = await is_user_on_chat(bot, "@x_O4i", m.peer_id)
+    check_if = await is_user_on_chat(bot, "@Labani_Botz", m.peer_id)
     if not check_if:
         return await m.reply("Please join @Labani_Botz then send me the link again.")
-    check_if = await is_user_on_chat(bot, "@x_O4i", m.peer_id)
+    check_if = await is_user_on_chat(bot, "@Labani_Chat", m.peer_id)
     if not check_if:
         return await m.reply(
-            "Please join @Labani_Botz then send me the link again."
+            "Please join @Labani_Chat then send me the link again."
         )
     await bot(
         ForwardMessagesRequest(
@@ -133,13 +133,13 @@ async def handle_message(m: Message):
     url = get_urls_from_string(m.text)
     if not url:
         return await m.reply("Please enter a valid url.")
-    check_if = await is_user_on_chat(bot, "@x_O4i", m.peer_id)
+    check_if = await is_user_on_chat(bot, "@Labani_Botz", m.peer_id)
     if not check_if:
         return await m.reply("Please join @Labani_Botz then send me the link again.")
-    check_if = await is_user_on_chat(bot, "@x_O4i", m.peer_id)
+    check_if = await is_user_on_chat(bot, "@Labani_Chat", m.peer_id)
     if not check_if:
         return await m.reply(
-            "Please join @x_O4i then send me the link again."
+            "Please join @Labani_Chat then send me the link again."
         )
     is_spam = db.get(m.sender_id)
     if is_spam and m.sender_id not in [6695586027]:
@@ -246,7 +246,7 @@ File Name: `{data['file_name']}`
 Size: **{data["size"]}** 
 Direct Link: [Click Here](https://t.me/TeraboxDownloadeRobot?start={uuid})
 
-@x_O4i
+@Labani_Botz
 """,
             supports_streaming=True,
             spoiler=True,
@@ -268,9 +268,9 @@ Direct Link: [Click Here](https://t.me/TeraboxDownloadeRobot?start={uuid})
             caption=f"""
 File Name: `{data['file_name']}`
 Size: **{data["size"]}** 
-Direct Link: [Click Here](https://t.me/TeraboxxDownload_Bot?start={uuid})
+Direct Link: [Click Here](https://t.me/TeraboxDownloadeRobot?start={uuid})
 
-Share : @x_O4i
+Share : @Labani_Botz
 """,
             progress_callback=progress_bar,
             thumb=thumbnail if thumbnail else None,
