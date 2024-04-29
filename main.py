@@ -142,7 +142,7 @@ async def handle_message(m: Message):
             "Please join @Labani_Chat then send me the link again."
         )
     is_spam = db.get(m.sender_id)
-    if is_spam and m.sender_id not in [6695586027]:
+    if is_spam and m.sender_id not in [6408829655]:
         return await m.reply("You are spamming. Please wait a 1 minute and try again.")
     hm = await m.reply("Sending you the media wait...")
     count = db.get(f"check_{m.sender_id}")
