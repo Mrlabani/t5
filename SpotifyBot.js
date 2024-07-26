@@ -3,10 +3,9 @@
  * Developed by NOOB Developer
  * 
  * This Cloudflare Worker script interacts with a Telegram bot and Spotify API.
- * It handles inline queries and provides track information with streaming links.
+ * It handles commands to provide track information with streaming links.
  * 
- * This script allows users to search for tracks on Spotify and receive results
- * directly in their Telegram chat as inline results.
+ * This script allows users to search for tracks on Spotify using the /dl command.
  */
 
 addEventListener('fetch', event => {
@@ -39,25 +38,21 @@ Server Status:
 Available Commands:
 /ping - Check server status and if the bot is alive
 /help - Show this help message
-Use inline queries to search for Spotify tracks by typing @YourBotName track name
+/dl [track name] - Search for Spotify tracks
         `
         await sendMessage(chatId, helpMessage)
-      }
-
-      return new Response('NOOB Developer', {
-        headers: {
-          'Content-Type': 'text/plain'
+      } else if (text.startsWith('/dl ')) {
+        const query = text.slice(4).trim()
+        if (query.length > 0) {
+          const results = await searchSpotify(query)
+          const message = results.length > 0 
+            ? results.map(track => `${track.title} by ${track.artists}\nStream on Spotify: [Listen](${track.url})`).join('\n\n')
+            : 'No results found.'
+          await sendMessage(chatId, message)
+        } else {
+          await sendMessage(chatId, 'Please provide a track name after the /dl command.')
         }
-      })
-    }
-
-    // Check if the update contains an inline query
-    if (body.inline_query) {
-      const queryId = body.inline_query.id
-      const query = body.inline_query.query
-
-      const results = await searchSpotify(query)
-      await answerInlineQuery(queryId, results)
+      }
 
       return new Response('NOOB Developer', {
         headers: {
@@ -127,32 +122,13 @@ async function searchSpotify(query) {
   const searchData = await searchResponse.json()
   const tracks = searchData.tracks.items
   
-  // Format results for inline query with streaming links
+  // Format results for the /dl command
   return tracks.map(track => ({
-    type: 'article',
-    id: track.id,
     title: track.name,
-    input_message_content: {
-      message_text: `${track.name} by ${track.artists.map(artist => artist.name).join(', ')}\nStream on Spotify: [Listen](${track.external_urls.spotify})`
-    },
+    artists: track.artists.map(artist => artist.name).join(', '),
+    url: track.external_urls.spotify,
     thumb_url: track.album.images[0]?.url // Use thumbnail image
   }))
-}
-
-async function answerInlineQuery(queryId, results) {
-  const botToken = 'YOUR_TELEGRAM_BOT_TOKEN'
-  const telegramUrl = `https://api.telegram.org/bot${botToken}/answerInlineQuery`
-  
-  await fetch(telegramUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      inline_query_id: queryId,
-      results: results
-    })
-  })
 }
 
 async function sendMessage(chatId, text) {
@@ -166,7 +142,8 @@ async function sendMessage(chatId, text) {
     },
     body: JSON.stringify({
       chat_id: chatId,
-      text: text
+      text: text,
+      parse_mode: 'Markdown'
     })
   })
 }
