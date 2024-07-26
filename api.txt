@@ -1,0 +1,55 @@
+addEventListener('fetch', event => {
+    event.respondWith(handleRequest(event.request));
+});
+
+async function handleRequest(request) {
+    const url = new URL(request.url);
+
+    if (url.pathname === '/download') {
+        const videoUrl = url.searchParams.get('url');
+        const quality = url.searchParams.get('quality') || 'best';
+
+        if (!videoUrl) {
+            return new Response('Missing video URL parameter.', { status: 400 });
+        }
+
+        try {
+            const downloadLink = await getYouTubeDownloadLink(videoUrl, quality);
+            if (downloadLink) {
+                return new Response(JSON.stringify({ downloadLink }), {
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            } else {
+                return new Response('Failed to retrieve download link.', { status: 500 });
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            return new Response('Internal server error.', { status: 500 });
+        }
+    } else {
+        return new Response('Not found.', { status: 404 });
+    }
+}
+
+async function getYouTubeDownloadLink(videoUrl, quality) {
+    const apiUrl = `https://your-youtube-api-endpoint.com/api/download?url=${encodeURIComponent(videoUrl)}&quality=${encodeURIComponent(quality)}`;
+
+    try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+            console.error('Error fetching download link:', response.statusText);
+            return null;
+        }
+
+        const data = await response.json();
+        if (data && data.downloadLink) {
+            return data.downloadLink;
+        } else {
+            console.error('Invalid response format:', data);
+            return null;
+        }
+    } catch (error) {
+        console.error('Error fetching download link:', error);
+        return null;
+    }
+}
