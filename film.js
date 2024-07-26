@@ -90,6 +90,7 @@ function getUptime() {
 async function copyData(sourceCollection, destinationCollection) {
   const uri = 'mongodb+srv://mrnoobx:DAZCdTczVWyECi04@cluster0.sedgwxy.mongodb.net/?retryWrites=true&w=majority';
   const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+
   try {
     await client.connect();
     const db = client.db('mrnoobx');
@@ -107,10 +108,12 @@ async function copyData(sourceCollection, destinationCollection) {
 async function cloneDatabase(databaseName) {
   const uri = 'mongodb+srv://mrnoobx:DAZCdTczVWyECi04@cluster0.sedgwxy.mongodb.net/?retryWrites=true&w=majority';
   const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+
   try {
     await client.connect();
     const db = client.db(databaseName);
     const collections = await db.listCollections().toArray();
+
     for (const collection of collections) {
       const source = db.collection(collection.name);
       const destination = client.db('cloned_' + databaseName).collection(collection.name);
@@ -127,31 +130,26 @@ async function cloneDatabase(databaseName) {
 async function downloadData(query) {
   const uri = 'mongodb+srv://mrnoobx:DAZCdTczVWyECi04@cluster0.sedgwxy.mongodb.net/?retryWrites=true&w=majority';
   const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
-  const fs = require('fs');
-  const path = require('path');
-  const fileName = `data_${Date.now()}.json`;
-  const filePath = path.join('/tmp', fileName);
 
   try {
     await client.connect();
     const db = client.db('mrnoobx');
     const data = await db.collection('Files').find({ data: new RegExp(query, 'i') }).toArray();
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+    
+    // Mock file URL for demonstration purposes
+    return 'https://example.com/path/to/data.json';  // Replace with actual file upload logic if needed
   } catch (error) {
     console.error('Error downloading data:', error);
+    return 'Error downloading data.';
   } finally {
     await client.close();
   }
-
-  // Upload the file to a public URL or a cloud storage service if needed
-  // For demonstration, we are returning a local path
-  return `https://example.com/path/to/${fileName}`;
 }
 
 async function storeAndSendData(channelId) {
   const uri = 'mongodb+srv://mrnoobx:DAZCdTczVWyECi04@cluster0.sedgwxy.mongodb.net/?retryWrites=true&w=majority';
   const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
-  const botToken = '7390073945:AAG1yvZolpshS-v9-7NodCVAg8B7shtmWf8';
+  const botToken = '7390073945:AAFS1lLJ4vNx7CRTua_9g5Htk5BSuYEOgOs';
   const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
 
   try {
@@ -167,7 +165,6 @@ async function storeAndSendData(channelId) {
       messageText += `*Data:* ${JSON.stringify(data, null, 2)}\n\n`;
     }
 
-    // Send data to the specified channel
     await fetch(telegramUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -187,6 +184,7 @@ async function storeAndSendData(channelId) {
 async function getStorageUsage() {
   const uri = 'mongodb+srv://mrnoobx:DAZCdTczVWyECi04@cluster0.sedgwxy.mongodb.net/?retryWrites=true&w=majority';
   const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+
   try {
     await client.connect();
     const db = client.db('mrnoobx');
@@ -211,16 +209,6 @@ async function getStorageUsage() {
   }
 }
 
-function getRandomFile() {
-  const files = [
-    { id: '1', title: 'Sample File 1', url: 'https://example.com/file1' },
-    { id: '2', title: 'Sample File 2', url: 'https://example.com/file2' },
-  ];
-
-  const randomIndex = Math.floor(Math.random() * files.length);
-  return files[randomIndex];
-}
-
 async function suggestFiles(query) {
   const files = [
     { id: '1', title: 'Sample File 1', description: 'This is a sample file 1', url: 'https://example.com/file1' },
@@ -242,7 +230,7 @@ async function suggestFiles(query) {
 }
 
 async function answerInlineQuery(inlineQueryId, results) {
-  const botToken = 'YOUR_TELEGRAM_BOT_TOKEN';
+  const botToken = '7390073945:AAFS1lLJ4vNx7CRTua_9g5Htk5BSuYEOgOs';
   const telegramUrl = `https://api.telegram.org/bot${botToken}/answerInlineQuery`;
 
   await fetch(telegramUrl, {
@@ -256,7 +244,7 @@ async function answerInlineQuery(inlineQueryId, results) {
 }
 
 async function sendMessage(chatId, text) {
-  const botToken = 'YOUR_TELEGRAM_BOT_TOKEN';
+  const botToken = '7390073945:AAFS1lLJ4vNx7CRTua_9g5Htk5BSuYEOgOs';
   const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
 
   await fetch(telegramUrl, {
