@@ -1,0 +1,152 @@
+const userMessages = new Set(); // To track users for broadcasting
+const startTime = Date.now(); // Track bot start time
+let messageCount = 0; // Track the number of messages processed
+
+addEventListener('fetch', event => {
+    event.respondWith(handleRequest(event.request));
+});
+
+async function handleRequest(request) {
+    let body;
+    try {
+        body = await request.json();
+    } catch (e) {
+        console.error('Error parsing JSON:', e);
+        return new Response('Invalid JSON', { status: 400 });
+    }
+
+    if (body.message) {
+        const chatId = body.message.chat.id;
+        const text = body.message.text;
+
+        userMessages.add(chatId); // Track users for broadcasting
+
+        if (text.startsWith('/')) {
+            // Handle commands
+            const commandResponse = await handleCommand(text, chatId);
+            await sendMessage(chatId, commandResponse);
+        } else {
+            // Call Gemini's API to get a response
+            const aiResponse = await getAIResponse(text);
+            await sendMessage(chatId, aiResponse);
+        }
+
+        messageCount++;
+    }
+
+    return new Response('OK', { status: 200 });
+}
+
+async function handleCommand(command, chatId) {
+    switch (command.toLowerCase()) {
+        case '/start':
+            return 'Hello! I am your friendly chatbot. How can I assist you today?';
+        case '/help':
+            return 'Here are some commands you can use:\n/start - Start the bot\n/help - Get help\n/stats - View bot stats\n/uptime - View bot uptime\n/broadcast <message> - Send a message to all users\n/status - Check bot status';
+        case '/stats':
+            return Messages processed: ${messageCount};
+        case '/uptime':
+            const uptime = formatUptime(Date.now() - startTime);
+            return Uptime: ${uptime};
+        case '/status':
+            return Bot is up and running. Messages processed: ${messageCount};
+        default:
+            if (command.startsWith('/broadcast ')) {
+                const broadcastMessage = command.substring('/broadcast '.length);
+                await broadcastMessageToUsers(broadcastMessage);
+                return 'Broadcast message sent.';
+            }
+            return 'Unknown command. Type /help to see available commands.';
+    }
+}
+
+async function getAIResponse(text) {
+    const apiKey = 'YOUR_GEMINI_API_KEY';
+    const apiUrl = 'https://api.gemini.com/v1/chat/completions';  // Placeholder URL
+
+    const payload = {
+        model: "gemini-1.0-turbo",  // Placeholder model name
+        messages: [
+            { role: "system", content: "You are a helpful assistant." },
+            { role: "user", content: text }
+        ],
+        max_tokens: 150
+    };
+
+    const init = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': Bearer ${apiKey}
+        },
+        body: JSON.stringify(payload)
+    };
+
+    try {
+        const response = await fetch(apiUrl, init);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Error response from Gemini API:', errorText);
+            return 'Sorry, I encountered an error while processing your request.';
+        }
+
+        const data = await response.json();
+        console.log('Gemini API response:', data);
+
+        if (data.choices && data.choices.length > 0) {
+            return data.choices[0].message.content.trim();
+        } else {
+            console.error('No choices found in Gemini API response');
+            return 'Sorry, I could not understand your request.';
+        }
+    } catch (error) {
+        console.error('Error calling Gemini API:', error);
+        return 'Sorry, I encountered an error while processing your request.';
+    }
+}
+
+async function sendMessage(chatId, text) {
+    const token = 'YOUR_TELEGRAM_BOT_TOKEN';
+    const url = https://api.telegram.org/bot${token}/sendMessage;
+
+    const payload = {
+        chat_id: chatId,
+        text: text
+    };
+const init = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    };
+
+    try {
+        const response = await fetch(url, init);
+        const data = await response.json();
+
+        if (!data.ok) {
+            console.error('Error from Telegram API:', data);
+        }
+
+        return data;
+    } catch (error) {
+        console.error('Error sending message to Telegram:', error);
+    }
+}
+
+async function broadcastMessageToUsers(message) {
+    for (let chatId of userMessages) {
+        await sendMessage(chatId, message);
+    }
+}
+
+function formatUptime(ms) {
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    return ${days}d ${hours % 24}h ${minutes % 60}m ${seconds % 60}s;
+}
