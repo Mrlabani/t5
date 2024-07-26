@@ -79,7 +79,7 @@ async function handleCommand(command, chatId) {
 }
 
 async function getAIResponse(text) {
-    const apiKey = 'YOUR_GEMINI_API_KEY'; // Replace with your actual Gemini API key
+    const apiKey = 'AIzaSyDSIIsqmb2bFMfUws4EiWeR5BL_KWUCr4Q'; // Replace with your actual Gemini API key
     const apiUrl = 'https://api.gemini.com/v1/chat/completions'; // Replace with the correct API URL
 
     const payload = {
@@ -123,7 +123,7 @@ async function getAIResponse(text) {
 }
 
 async function sendMessage(chatId, text) {
-    const token = 'YOUR_TELEGRAM_BOT_TOKEN'; // Replace with your actual Telegram bot token
+    const token = '7473908362:AAECNtPweNJ8UDpiJm9KERf642VXee8uGAg'; // Replace with your actual Telegram bot token
     const url = `https://api.telegram.org/bot${token}/sendMessage`;
 
     const payload = {
