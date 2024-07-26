@@ -22,16 +22,22 @@ async function handleRequest(request) {
         userMessages.add(chatId); // Track users for broadcasting
 
         let responseText;
-        if (text.startsWith('/')) {
-            // Handle commands
-            responseText = await handleCommand(text, chatId);
-        } else {
-            // Call AI API to get a response
-            responseText = await getAIResponse(text);
-        }
+        try {
+            if (text.startsWith('/')) {
+                // Handle commands
+                responseText = await handleCommand(text, chatId);
+            } else {
+                // Call AI API to get a response
+                responseText = await getAIResponse(text);
+            }
 
-        await sendMessage(chatId, responseText);
-        messageCount++;
+            await sendMessage(chatId, responseText);
+            messageCount++;
+        } catch (error) {
+            console.error('Error handling message:', error);
+            responseText = 'Sorry, I encountered an error while processing your request.';
+            await sendMessage(chatId, responseText);
+        }
     }
 
     return new Response('OK', { status: 200 });
@@ -149,7 +155,11 @@ async function sendMessage(chatId, text) {
 
 async function broadcastMessageToUsers(message) {
     for (const chatId of userMessages) {
-        await sendMessage(chatId, message);
+        try {
+            await sendMessage(chatId, message);
+        } catch (error) {
+            console.error(`Error broadcasting message to chat ${chatId}:`, error);
+        }
     }
 }
 
