@@ -6,6 +6,7 @@
  * It handles commands to provide track information with streaming links.
  * 
  * This script allows users to search for tracks on Spotify using the /dl command.
+ * Users can also upload a high-quality track file which the bot will acknowledge.
  */
 
 addEventListener('fetch', event => {
@@ -39,6 +40,7 @@ Available Commands:
 /ping - Check server status and if the bot is alive
 /help - Show this help message
 /dl [track name] - Search for Spotify tracks
+Upload a high-quality track file to get a confirmation message
         `
         await sendMessage(chatId, helpMessage)
       } else if (text.startsWith('/dl ')) {
@@ -53,6 +55,28 @@ Available Commands:
           await sendMessage(chatId, 'Please provide a track name after the /dl command.')
         }
       }
+
+      return new Response('NOOB Developer', {
+        headers: {
+          'Content-Type': 'text/plain'
+        }
+      })
+    }
+
+    // Check if the update contains an audio file (high-quality track upload)
+    if (body.message && body.message.audio) {
+      const chatId = body.message.chat.id
+      const fileId = body.message.audio.file_id
+      const fileName = body.message.audio.file_name || 'Unnamed track'
+      const duration = body.message.audio.duration
+
+      const fileUrl = await getFileUrl(fileId)
+      const confirmationMessage = `
+Received high-quality track: ${fileName}
+Duration: ${duration} seconds
+File URL: ${fileUrl}
+      `
+      await sendMessage(chatId, confirmationMessage)
 
       return new Response('NOOB Developer', {
         headers: {
@@ -131,8 +155,16 @@ async function searchSpotify(query) {
   }))
 }
 
-async function sendMessage(chatId, text) {
+async function getFileUrl(fileId) {
   const botToken = '7404279399:AAFlyzqSlcz4VkBM5Z-x4-zxzQNBf4Xydvk'
+  const fileResponse = await fetch(`https://api.telegram.org/bot${botToken}/getFile?file_id=${fileId}`)
+  const fileData = await fileResponse.json()
+  const filePath = fileData.result.file_path
+  return `https://api.telegram.org/file/bot${botToken}/${filePath}`
+}
+
+async function sendMessage(chatId, text) {
+  const botToken = 'YOUR_TELEGRAM_BOT_TOKEN'
   const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`
   
   await fetch(telegramUrl, {
