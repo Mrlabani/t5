@@ -10,9 +10,12 @@ async function handleRequest(request) {
   const UPTIME_ROBOT_API_KEY = 'u2609359-a151f43eb2a64609ef37cb4d';
   const UPTIME_ROBOT_API_URL = 'https://api.uptimerobot.com/v2/';
 
-  // Handle incoming Telegram updates
+  // Check if the request is from the Telegram webhook
   if (request.method === 'POST' && url.pathname === '/webhook') {
     const update = await request.json();
+    
+    // Log the update to check the incoming data
+    console.log('Received update:', update);
 
     if (update.message) {
       const chatId = update.message.chat.id;
@@ -50,6 +53,10 @@ async function sendMessage(chatId, text) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ chat_id: chatId, text: text })
   });
+
+  // Log the response to debug message sending
+  console.log('sendMessage response:', await response.json());
+  
   return response.ok;
 }
 
@@ -72,6 +79,9 @@ async function getMonitors(chatId) {
   });
   
   const data = await response.json();
+
+  // Log the data to debug fetching monitors
+  console.log('getMonitors data:', data);
   
   if (data.monitors && data.monitors.length > 0) {
     let statusMessage = 'Uptime Robot Monitors:\n';
@@ -93,6 +103,9 @@ async function newMonitor(chatId, friendly_name, url, type) {
 
   const data = await response.json();
 
+  // Log the data to debug monitor creation
+  console.log('newMonitor data:', data);
+
   if (data.stat === 'ok') {
     return await sendMessage(chatId, `Monitor created successfully: ${friendly_name}`);
   } else {
@@ -108,6 +121,9 @@ async function deleteMonitor(chatId, id) {
   });
 
   const data = await response.json();
+
+  // Log the data to debug monitor deletion
+  console.log('deleteMonitor data:', data);
 
   if (data.stat === 'ok') {
     return await sendMessage(chatId, `Monitor deleted successfully: ${id}`);
