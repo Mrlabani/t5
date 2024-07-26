@@ -1,4 +1,4 @@
-const userMessages = new Set(); // To track users for broadcasting
+const userMessages = new Set(); // Track users for broadcasting
 const startTime = Date.now(); // Track bot start time
 let messageCount = 0; // Track the number of messages processed
 
@@ -21,16 +21,16 @@ async function handleRequest(request) {
 
         userMessages.add(chatId); // Track users for broadcasting
 
+        let responseText;
         if (text.startsWith('/')) {
             // Handle commands
-            const commandResponse = await handleCommand(text, chatId);
-            await sendMessage(chatId, commandResponse);
+            responseText = await handleCommand(text, chatId);
         } else {
-            // Call Gemini's API to get a response
-            const aiResponse = await getAIResponse(text);
-            await sendMessage(chatId, aiResponse);
+            // Call AI API to get a response
+            responseText = await getAIResponse(text);
         }
 
+        await sendMessage(chatId, responseText);
         messageCount++;
     }
 
@@ -38,11 +38,19 @@ async function handleRequest(request) {
 }
 
 async function handleCommand(command, chatId) {
-    switch (command.toLowerCase()) {
+    const normalizedCommand = command.trim().toLowerCase();
+
+    switch (normalizedCommand) {
         case '/start':
             return 'Hello! I am your friendly chatbot. How can I assist you today?';
         case '/help':
-            return 'Here are some commands you can use:\n/start - Start the bot\n/help - Get help\n/stats - View bot stats\n/uptime - View bot uptime\n/broadcast <message> - Send a message to all users\n/status - Check bot status';
+            return `Here are some commands you can use:
+/start - Start the bot
+/help - Get help
+/stats - View bot stats
+/uptime - View bot uptime
+/broadcast <message> - Send a message to all users
+/status - Check bot status`;
         case '/stats':
             return `Messages processed: ${messageCount}`;
         case '/uptime':
@@ -51,21 +59,25 @@ async function handleCommand(command, chatId) {
         case '/status':
             return `Bot is up and running. Messages processed: ${messageCount}`;
         default:
-            if (command.startsWith('/broadcast ')) {
-                const broadcastMessage = command.substring('/broadcast '.length);
-                await broadcastMessageToUsers(broadcastMessage);
-                return 'Broadcast message sent.';
+            if (normalizedCommand.startsWith('/broadcast ')) {
+                const broadcastMessage = normalizedCommand.substring('/broadcast '.length).trim();
+                if (broadcastMessage.length > 0) {
+                    await broadcastMessageToUsers(broadcastMessage);
+                    return 'Broadcast message sent.';
+                } else {
+                    return 'Please provide a message to broadcast.';
+                }
             }
             return 'Unknown command. Type /help to see available commands.';
     }
 }
 
 async function getAIResponse(text) {
-    const apiKey = 'YOUR_GEMINI_API_KEY';
-    const apiUrl = 'https://api.gemini.com/v1/chat/completions';  // Placeholder URL
+    const apiKey = 'YOUR_GEMINI_API_KEY'; // Replace with your actual Gemini API key
+    const apiUrl = 'https://api.gemini.com/v1/chat/completions'; // Replace with the correct API URL
 
     const payload = {
-        model: "gemini-1.0-turbo",  // Placeholder model name
+        model: "gemini-1.0-turbo", // Replace with the correct model name
         messages: [
             { role: "system", content: "You are a helpful assistant." },
             { role: "user", content: text }
@@ -92,8 +104,6 @@ async function getAIResponse(text) {
         }
 
         const data = await response.json();
-        console.log('Gemini API response:', data);
-
         if (data.choices && data.choices.length > 0) {
             return data.choices[0].message.content.trim();
         } else {
@@ -107,7 +117,7 @@ async function getAIResponse(text) {
 }
 
 async function sendMessage(chatId, text) {
-    const token = 'YOUR_TELEGRAM_BOT_TOKEN';
+    const token = 'YOUR_TELEGRAM_BOT_TOKEN'; // Replace with your actual Telegram bot token
     const url = `https://api.telegram.org/bot${token}/sendMessage`;
 
     const payload = {
@@ -138,7 +148,7 @@ async function sendMessage(chatId, text) {
 }
 
 async function broadcastMessageToUsers(message) {
-    for (let chatId of userMessages) {
+    for (const chatId of userMessages) {
         await sendMessage(chatId, message);
     }
 }
