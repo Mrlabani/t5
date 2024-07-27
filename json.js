@@ -2,7 +2,7 @@ addEventListener('fetch', event => {
   event.respondWith(handleRequest(event.request));
 });
 
-const TELEGRAM_BOT_TOKEN = 'YOUR_TELEGRAM_BOT_TOKEN'; // Replace with your bot token
+const TELEGRAM_BOT_TOKEN = 'YOUR_TELEGRAM_BOT_TOKEN'; // Replace with your actual bot token
 const TELEGRAM_API_URL = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}`;
 
 // Handles incoming requests
@@ -10,8 +10,8 @@ async function handleRequest(request) {
   if (request.method === 'POST') {
     try {
       const update = await request.json();
+      console.log('Received update:', update); // Log the incoming update for debugging
 
-      // Validate if update contains message
       if (!update.message || !update.message.text) {
         console.log('Invalid update structure:', update);
         return new Response('Invalid update structure', { status: 400 });
@@ -54,9 +54,9 @@ async function sendMessage(chatId, text) {
       body: JSON.stringify(payload),
     });
 
+    const responseBody = await response.json(); // Read the response from Telegram
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(`Failed to send message: ${response.statusText} - ${errorData.description}`);
+      throw new Error(`Failed to send message: ${response.statusText} - ${responseBody.description}`);
     }
   } catch (error) {
     console.error('Error sending message:', error);
