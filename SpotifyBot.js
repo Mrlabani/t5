@@ -23,7 +23,7 @@ async function getSpotifyToken() {
 
 async function searchSpotify(query) {
     const token = await getSpotifyToken();
-    const response = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track`, {
+    const response = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=5`, {
         headers: {
             'Authorization': `Bearer ${token}`,
         },
@@ -43,31 +43,96 @@ async function handleUpdate(update) {
     const text = update.message.text;
 
     if (text.toLowerCase() === '/start') {
-        await sendMessage(chatId, "Welcome to the Spotify Downloader Bot! Use the following commands:\n/start - Welcome message\n/help - Get help information\n<song name> - Search for a song");
+        await sendMessage(chatId, "Welcome to the Spotify Downloader Bot! Use the following commands:\n/start - Welcome message\n/help - Get help information\n/full <song name> - Get full track link");
     } else if (text.toLowerCase() === '/help') {
-        await sendMessage(chatId, "To use this bot, send me a song name or a Spotify URL to search for tracks. For more details, visit the [Spotify API documentation](https://developer.spotify.com/documentation/web-api/).");
+        await sendMessage(chatId, "To use this bot, send me a song name to get the full track link. Use /full <song name>.");
+    } else if (text.toLowerCase().startsWith('/full ')) {
+        const query = text.substring('/full '.length);
+        await handleFullTrack(chatId, query);
     } else {
-        try {
-            const searchResults = await searchSpotify(text);
-            const track = searchResults.tracks.items[0];
-            if (track) {
-                const responseText = `I found:\nTitle: ${track.name}\nArtist: ${track.artists[0].name}\nAlbum: ${track.album.name}\nRelease Date: ${track.album.release_date}\nPreview: ${track.preview_url ? track.preview_url : 'No preview available'}`;
-                await sendMessage(chatId, responseText);
-            } else {
-                await sendMessage(chatId, "Sorry, I couldn't find that song. Please try another.");
-            }
-        } catch (error) {
-            console.error('Error handling update:', error);
-            await sendMessage(chatId, "An error occurred while processing your request. Please try again later.");
-        }
+        await sendMessage(chatId, "Unknown command. Use /help for a list of commands.");
     }
 }
 
-async function sendMessage(chatId, text) {
+async function handleFullTrack(chatId, query) {
+    try {
+        const searchResults = await searchSpotify(query);
+        const tracks = searchResults.tracks.items;
+        if (tracks.length > 0) {
+            const buttons = tracks.map(track => ({
+                text: `${track.name} by ${track.artists[0].name}`,
+                callback_data: `track:${track.id}`
+            }));
+
+            const inlineKeyboard = {
+                inline_keyboard: [buttons]
+            };
+
+            const responseText = "I found the following tracks. Please choose one:";
+            await sendMessage(chatId, responseText, inlineKeyboard);
+        } else {
+            await sendMessage(chatId, "Sorry, I couldn't find that song. Please try another.");
+        }
+    } catch (error) {
+        console.error('Error handling full track request:', error);
+        await sendMessage(chatId, "An error occurred while processing your request. Please try again later.");
+    }
+}
+
+async function handleCallbackQuery(update) {
+    const chatId = update.callback_query.message.chat.id;
+    const trackId = update.callback_query.data.split(':')[1];
+    const trackInfo = await getTrackInfo(trackId);
+
+    const responseText = `Here is your track:\n` +
+                         `**Title:** ${trackInfo.name}\n` +
+                         `**Artist:** ${trackInfo.artist}\n` +
+                         `**Album:** ${trackInfo.album}\n` +
+                         `**Duration:** ${formatDuration(trackInfo.duration_ms)}\n` +
+                         `**Release Date:** ${trackInfo.release_date}\n` +
+                         `**File Size (approx.):** 4-6 MB (based on streaming quality)\n` +
+                         `**Full Track:** [Listen on Spotify](${trackInfo.url})`;
+
+    await sendMessage(chatId, responseText, null, true);
+}
+
+async function getTrackInfo(trackId) {
+    const token = await getSpotifyToken();
+    const response = await fetch(`https://api.spotify.com/v1/tracks/${trackId}`, {
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        },
+    });
+
+    if (!response.ok) {
+        console.error('Failed to get track info:', await response.text());
+        throw new Error('Failed to get track info');
+    }
+
+    const trackInfo = await response.json();
+    return {
+        name: trackInfo.name,
+        artist: trackInfo.artists[0].name,
+        album: trackInfo.album.name,
+        duration_ms: trackInfo.duration_ms,
+        release_date: trackInfo.album.release_date,
+        url: trackInfo.external_urls.spotify
+    };
+}
+
+function formatDuration(duration_ms) {
+    const minutes = Math.floor(duration_ms / 60000);
+    const seconds = Math.round((duration_ms % 60000) / 1000);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
+async function sendMessage(chatId, text, replyMarkup = null, parseMode = false) {
     const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
     const payload = {
         chat_id: chatId,
         text: text,
+        reply_markup: replyMarkup,
+        parse_mode: parseMode ? 'Markdown' : undefined
     };
 
     const response = await fetch(url, {
@@ -84,15 +149,15 @@ async function sendMessage(chatId, text) {
     }
 }
 
-addEventListener('fetch', event => {
-    event.respondWith(handleRequest(event.request));
-});
-
 async function handleRequest(request) {
     if (request.method === 'POST') {
         try {
             const update = await request.json();
-            await handleUpdate(update);
+            if (update.message) {
+                await handleUpdate(update);
+            } else if (update.callback_query) {
+                await handleCallbackQuery(update);
+            }
             return new Response('ok', { status: 200 });
         } catch (error) {
             console.error('Error handling request:', error);
@@ -102,3 +167,7 @@ async function handleRequest(request) {
         return new Response('Method Not Allowed', { status: 405 });
     }
 }
+
+addEventListener('fetch', event => {
+    event.respondWith(handleRequest(event.request));
+});
