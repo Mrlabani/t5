@@ -1,4 +1,4 @@
-const TELEGRAM_BOT_TOKEN = '7390073945:AAEGxghpMS1uaPP1NbK_SMkMnSoZHhg_TyE'; // Replace with your Telegram bot token
+const TELEGRAM_BOT_TOKEN = '7390073945:AAEXdd_b9M9FWvX4MpaoHSEg1CthPRqSjsY'; // Replace with your Telegram bot token
 const SPOTIFY_CLIENT_ID = 'b9c2df50c0df4676bb9c8525d8dc586b'; // Replace with your Spotify client ID
 const SPOTIFY_CLIENT_SECRET = 'd859816a46bb412eafd716d9056629bd'; // Replace with your Spotify client secret
 
@@ -14,7 +14,8 @@ async function getSpotifyToken() {
     });
 
     if (!response.ok) {
-        console.error('Failed to get Spotify token:', await response.text());
+        const errorText = await response.text();
+        console.error('Failed to get Spotify token:', errorText);
         throw new Error('Failed to get Spotify token');
     }
 
@@ -32,7 +33,8 @@ async function searchSpotify(query) {
     });
 
     if (!response.ok) {
-        console.error('Failed to search Spotify:', await response.text());
+        const errorText = await response.text();
+        console.error('Failed to search Spotify:', errorText);
         throw new Error('Failed to search Spotify');
     }
 
@@ -86,18 +88,24 @@ async function handleFullTrack(chatId, query) {
 async function handleCallbackQuery(update) {
     const chatId = update.callback_query.message.chat.id;
     const trackId = update.callback_query.data.split(':')[1];
-    const trackInfo = await getTrackInfo(trackId);
 
-    const responseText = `Here is your track:\n` +
-                         `**Title:** ${trackInfo.name}\n` +
-                         `**Artist:** ${trackInfo.artist}\n` +
-                         `**Album:** ${trackInfo.album}\n` +
-                         `**Duration:** ${formatDuration(trackInfo.duration_ms)}\n` +
-                         `**Release Date:** ${trackInfo.release_date}\n` +
-                         `**File Size (approx.):** 4-6 MB (based on streaming quality)\n` +
-                         `**Full Track:** [Listen on Spotify](${trackInfo.url})`;
+    try {
+        const trackInfo = await getTrackInfo(trackId);
 
-    await sendMessage(chatId, responseText, null, true);
+        const responseText = `Here is your track:\n` +
+                             `**Title:** ${trackInfo.name}\n` +
+                             `**Artist:** ${trackInfo.artist}\n` +
+                             `**Album:** ${trackInfo.album}\n` +
+                             `**Duration:** ${formatDuration(trackInfo.duration_ms)}\n` +
+                             `**Release Date:** ${trackInfo.release_date}\n` +
+                             `**File Size (approx.):** 4-6 MB (based on streaming quality)\n` +
+                             `**Full Track:** [Listen on Spotify](${trackInfo.url})`;
+
+        await sendMessage(chatId, responseText, null, true);
+    } catch (error) {
+        console.error('Error handling callback query:', error);
+        await sendMessage(chatId, "An error occurred while processing your request. Please try again later.");
+    }
 }
 
 // Function to get track information
@@ -110,7 +118,8 @@ async function getTrackInfo(trackId) {
     });
 
     if (!response.ok) {
-        console.error('Failed to get track info:', await response.text());
+        const errorText = await response.text();
+        console.error('Failed to get track info:', errorText);
         throw new Error('Failed to get track info');
     }
 
@@ -138,7 +147,7 @@ async function sendMessage(chatId, text, replyMarkup = null, parseMode = false) 
     const payload = {
         chat_id: chatId,
         text: text,
-        reply_markup: replyMarkup,
+        reply_markup: replyMarkup ? JSON.stringify(replyMarkup) : undefined,
         parse_mode: parseMode ? 'Markdown' : undefined
     };
 
@@ -151,7 +160,8 @@ async function sendMessage(chatId, text, replyMarkup = null, parseMode = false) 
     });
 
     if (!response.ok) {
-        console.error('Failed to send message:', await response.text());
+        const errorText = await response.text();
+        console.error('Failed to send message:', errorText);
         throw new Error('Failed to send message');
     }
 }
@@ -172,7 +182,7 @@ async function handleRequest(request) {
             return new Response('Bad Request', { status: 400 });
         }
     } else {
-        return new Response('bot running...', { status: 405 });
+        return new Response('bot running...🍃', { status: 405 });
     }
 }
 
