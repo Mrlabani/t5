@@ -164,7 +164,7 @@ async function handleRequest(request) {
             return new Response('Bad Request', { status: 400 });
         }
     } else {
-        return new Response('Method Not Allowed', { status: 405 });
+        return new Response('Bot running....', { status: 405 });
     }
 }
 
