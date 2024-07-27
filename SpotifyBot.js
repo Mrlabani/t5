@@ -1,7 +1,8 @@
-const TELEGRAM_BOT_TOKEN = '7390073945:AAHgJqfyV2nXaM2SCFyaf8k1sCSGZ1L91Q0'; // Replace with your Telegram bot token
+const TELEGRAM_BOT_TOKEN = '7390073945:AAEGxghpMS1uaPP1NbK_SMkMnSoZHhg_TyE'; // Replace with your Telegram bot token
 const SPOTIFY_CLIENT_ID = 'b9c2df50c0df4676bb9c8525d8dc586b'; // Replace with your Spotify client ID
 const SPOTIFY_CLIENT_SECRET = 'd859816a46bb412eafd716d9056629bd'; // Replace with your Spotify client secret
 
+// Function to get Spotify token
 async function getSpotifyToken() {
     const response = await fetch('https://accounts.spotify.com/api/token', {
         method: 'POST',
@@ -21,6 +22,7 @@ async function getSpotifyToken() {
     return data.access_token;
 }
 
+// Function to search Spotify
 async function searchSpotify(query) {
     const token = await getSpotifyToken();
     const response = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=5`, {
@@ -35,9 +37,10 @@ async function searchSpotify(query) {
     }
 
     const data = await response.json();
-    return data;
+    return data.tracks.items;
 }
 
+// Function to handle Telegram updates
 async function handleUpdate(update) {
     const chatId = update.message.chat.id;
     const text = update.message.text;
@@ -54,10 +57,10 @@ async function handleUpdate(update) {
     }
 }
 
+// Function to handle full track request
 async function handleFullTrack(chatId, query) {
     try {
-        const searchResults = await searchSpotify(query);
-        const tracks = searchResults.tracks.items;
+        const tracks = await searchSpotify(query);
         if (tracks.length > 0) {
             const buttons = tracks.map(track => ({
                 text: `${track.name} by ${track.artists[0].name}`,
@@ -79,6 +82,7 @@ async function handleFullTrack(chatId, query) {
     }
 }
 
+// Function to handle callback queries
 async function handleCallbackQuery(update) {
     const chatId = update.callback_query.message.chat.id;
     const trackId = update.callback_query.data.split(':')[1];
@@ -96,6 +100,7 @@ async function handleCallbackQuery(update) {
     await sendMessage(chatId, responseText, null, true);
 }
 
+// Function to get track information
 async function getTrackInfo(trackId) {
     const token = await getSpotifyToken();
     const response = await fetch(`https://api.spotify.com/v1/tracks/${trackId}`, {
@@ -120,12 +125,14 @@ async function getTrackInfo(trackId) {
     };
 }
 
+// Function to format duration
 function formatDuration(duration_ms) {
     const minutes = Math.floor(duration_ms / 60000);
     const seconds = Math.round((duration_ms % 60000) / 1000);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
 
+// Function to send messages
 async function sendMessage(chatId, text, replyMarkup = null, parseMode = false) {
     const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
     const payload = {
@@ -149,6 +156,7 @@ async function sendMessage(chatId, text, replyMarkup = null, parseMode = false) 
     }
 }
 
+// Main function to handle requests
 async function handleRequest(request) {
     if (request.method === 'POST') {
         try {
@@ -164,10 +172,11 @@ async function handleRequest(request) {
             return new Response('Bad Request', { status: 400 });
         }
     } else {
-        return new Response('Bot running....', { status: 405 });
+        return new Response('bot running...', { status: 405 });
     }
 }
 
+// Event listener for fetch events
 addEventListener('fetch', event => {
     event.respondWith(handleRequest(event.request));
 });
